@@ -17,7 +17,7 @@ export default function Loading() {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute top-10 left-10 h-72 w-72 rounded-full bg-[#D79DE8]/20 blur-3xl"
+          className="absolute top-10 left-10 h-72 w-72 rounded-full bg-[#3B3B98]/20 blur-3xl"
         />
 
         <motion.div
@@ -46,9 +46,9 @@ export default function Loading() {
             repeat: Infinity,
             ease: "linear",
           }}
-          className="flex h-24 w-24 items-center justify-center rounded-3xl bg-[#D79DE8] shadow-2xl"
+          className="flex h-24 w-24 items-center justify-center rounded-3xl bg-[#3B3B98] shadow-2xl"
         >
-          <span className="text-3xl font-bold text-white">JP</span>
+          <span className="text-3xl font-bold text-white">FF</span>
         </motion.div>
 
         {/* Animated Spinner */}
@@ -63,7 +63,7 @@ export default function Loading() {
               duration: 1.5,
               ease: "linear",
             }}
-            className="absolute inset-0 rounded-full border-4 border-[#D79DE8]/20 border-t-[#D79DE8]"
+            className="absolute inset-0 rounded-full border-4 border-[#D79DE8]/20 border-t-[#3B3B98]"
           />
 
           <motion.div
@@ -75,7 +75,7 @@ export default function Loading() {
               duration: 2,
               ease: "linear",
             }}
-            className="absolute inset-3 rounded-full border-4 border-transparent border-t-purple-400"
+            className="absolute inset-3 rounded-full border-4 border-transparent border-t-[#3B3B98]"
           />
 
         </div>
@@ -89,7 +89,7 @@ export default function Loading() {
             repeat: Infinity,
             duration: 1.5,
           }}
-          className="text-2xl font-bold text-[#D79DE8]"
+          className="text-2xl font-bold text-[#3B3B98]"
         >
           Loading...
         </motion.h2>

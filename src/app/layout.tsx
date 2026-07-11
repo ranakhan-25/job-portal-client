@@ -3,6 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import { Providers } from "@/providers/ThermeProvider";
+import { ToastContainer } from "react-toastify";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -64,10 +65,12 @@ export default function RootLayout({
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-background text-foreground"
       >
-        <Providers>
+        <Providers >
           <Navbar />
           {children}
         </Providers>
+
+        <ToastContainer/>
       </body>
     </html>
   );

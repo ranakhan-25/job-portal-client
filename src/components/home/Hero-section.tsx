@@ -1,139 +1,227 @@
 "use client";
 
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
+
 import { motion } from "framer-motion";
+
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
+import "swiper/css/effect-fade";
+
+import Image from "next/image";
 import Link from "next/link";
+import { accessUser } from "@/lib/auth/accessUser";
+import { useEffect, useState } from "react";
 
-export default function Hero() {
+const slides = [
+  {
+    id: 1,
+    title: "Support Great Ideas",
+    heading: "Turn Dreams Into Reality",
+    description:
+      "Help creators bring innovative projects to life through community powered crowdfunding.",
+    image:
+      "https://enventyspartners.com/wp-content/uploads/2016/09/crowdfunding-marketing-team.jpg",
+  },
+  {
+    id: 2,
+    title: "Create Your Campaign",
+    heading: "Launch Your Next Big Project",
+    description:
+      "Share your vision, collect contributions and build something meaningful.",
+    image:
+      "https://ideabuddy.com/wp-content/uploads/2023/05/startup-business-plan.jpg",
+  },
+  {
+    id: 3,
+    title: "Together We Grow",
+    heading: "A Community That Supports Innovation",
+    description:
+      "Connect with supporters and make a positive impact around the world.",
+    image:
+      "https://static.vecteezy.com/system/resources/previews/077/825/897/large_2x/friends-hands-and-star-together-outdoor-for-unity-community-or-teamwork-support-below-nature-and-group-with-sign-shape-for-solidarity-connection-and-partnership-with-interaction-or-collaboration-photo.jpg",
+  },
+];
+
+export default function HeroSection() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const currentUser = await accessUser();
+      setUser(currentUser);
+    };
+
+    getUser();
+  }, []);
+
+
   return (
-    <section className="relative overflow-hidden bg-base-100 dark:bg-black ">
-      {/* Background Blur */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-0 top-20 h-80 w-80 rounded-full bg-[#3B3B98]/10 blur-3xl" />
-
-        <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-[#3B3B98]/10 blur-3xl" />
-      </div>
-
-      <div className="container mx-auto px-6 py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="mx-auto max-w-5xl text-center"
-        >
-          {/* Badge */}
-
-          <span className="inline-flex items-center rounded-full border border-[#3B3B98]/20 bg-[#3B3B98]/10 px-5 py-2 text-sm font-semibold text-[#3B3B98]">
-            🚀 Trusted by 5,000+ Companies Worldwide
-          </span>
-
-          {/* Heading */}
-
-          <h1 className="mt-8 text-5xl font-black leading-tight md:text-7xl">
-            Find Your{" "}
-            <motion.span
-              initial={{
-                x: -150,
-                opacity: 0,
-              }}
-              animate={{
-                x: 0,
-                opacity: 1,
-              }}
-              transition={{
-                duration: 0.8,
-                delay: 0.3,
-                ease: "easeOut",
-              }}
-              className="block text-[#3B3B98]"
-            >
-              Dream Job
-            </motion.span>
-            Build Your Career
-          </h1>
-
-          {/* Description */}
-
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-gray-500">
-            Discover thousands of verified opportunities from leading companies.
-            Search jobs, connect with employers and take the next step toward
-            your dream career.
-          </p>
-
-          {/* Search */}
-
-          <div className="mx-auto mt-12 max-w-5xl rounded-xl border p-4 shadow-2xl">
-            <div className="grid gap-4 lg:grid-cols-4">
-              <input
-                type="text"
-                placeholder="🔍 Job title or keyword"
-                className="input input-bordered w-full dark:bg-[#3b3b982b]"
+    <section className="relative h-[90vh] overflow-hidden">
+      <Swiper
+        modules={[Autoplay, Pagination, Navigation, EffectFade]}
+        effect="fade"
+        autoplay={{
+          delay: 5000,
+          disableOnInteraction: false,
+        }}
+        pagination={{
+          clickable: true,
+        }}
+        navigation
+        loop
+        className="h-full"
+      >
+        {slides.map((slide) => (
+          <SwiperSlide key={slide.id}>
+            <div className="relative h-full w-full">
+              {/* Background Image */}
+              <Image
+                src={slide.image}
+                alt={slide.heading}
+                fill
+                priority
+                className="
+                object-cover
+                "
               />
 
-              <input
-                type="text"
-                placeholder="📍 Location"
-                className="input input-bordered w-full dark:bg-[#3b3b982b]"
+              {/* Gradient Overlay */}
+              <div
+                className="
+                absolute
+                inset-0
+                bg-gradient-to-r
+                from-black/80
+                via-black/60
+                to-black/40
+                "
               />
 
-              <select className="select select-bordered w-full dark:bg-[#0d0d1a]">
-                <option>Job Type</option>
-                <option>Remote</option>
-                <option>Full Time</option>
-                <option>Part Time</option>
-                <option>Internship</option>
-              </select>
+              {/* Content */}
+              <div
+                className="
+                relative
+                z-10
+                h-full
+                flex
+                items-center
+                "
+              >
+                <div
+                  className="
+                  max-w-7xl
+                  mx-auto
+                  px-5
+                  w-full
+                  "
+                >
+                  <motion.div
+                    initial={{
+                      opacity: 0,
+                      y: 60,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    transition={{
+                      duration: 0.9,
+                    }}
+                    className="
+                    max-w-3xl
+                    text-white
+                    "
+                  >
+                    <p
+                      className="
+                      text-red-400
+                      uppercase
+                      font-semibold
+                      tracking-[4px]
+                      mb-5
+                      text-sm
+                      "
+                    >
+                      {slide.title}
+                    </p>
 
-              <button className="btn bg-[#3B3B98] border-0 text-white hover:bg-[#2E2E7A]">
-                Search Jobs
-              </button>
+                    <h1
+                      className="
+                      text-4xl
+                      sm:text-5xl
+                      md:text-7xl
+                      font-bold
+                      leading-tight
+                      "
+                    >
+                      {slide.heading}
+                    </h1>
+
+                    <p
+                      className="
+                      mt-6
+                      text-gray-200
+                      text-lg
+                      md:text-xl
+                      max-w-2xl
+                      "
+                    >
+                      {slide.description}
+                    </p>
+
+                    <div
+                      className="
+                      mt-8
+                      flex
+                      gap-4
+                      flex-wrap
+                      "
+                    >
+                      <Link
+                        href="/campaigns"
+                        className="
+                        px-8
+                        py-3
+                        rounded-full
+                        bg-red-500
+                        hover:bg-red-600
+                        transition
+                        font-semibold
+                        shadow-lg
+                        "
+                      >
+                        Explore Campaigns
+                      </Link>
+
+                      {user == null && (
+                        <Link
+                          href="/auth/signup"
+                          className="
+                        px-8
+                        py-3
+                        rounded-full
+                        border
+                        border-white
+                        hover:bg-white
+                        hover:text-black
+                        transition
+                        font-semibold
+                        "
+                        >
+                          Start Campaign
+                        </Link>
+                      )}
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
             </div>
-          </div>
-
-          {/* Buttons */}
-
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              href="/jobs"
-              className="btn bg-[#3B3B98] border-0 px-8 text-white hover:bg-[#2E2E7A]"
-            >
-              Browse Jobs
-            </Link>
-
-            <Link
-              href="/companies"
-              className="btn btn-outline border-[#3B3B98] px-8 text-[#3B3B98] hover:bg-[#3B3B98] hover:text-white"
-            >
-              Explore Companies
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* Floating Cards */}
-
-        <motion.div
-          animate={{ y: [0, -15, 0] }}
-          transition={{ repeat: Infinity, duration: 4 }}
-          className="absolute left-10 top-44 hidden rounded-2xl border border-base-300 dark:border-[#27274954] bg-base-100 dark:bg-[#27274954] p-5 shadow-xl xl:block"
-        >
-          <p className="text-sm text-base-content/60 dark:text-white">
-            💼 Jobs Posted Today
-          </p>
-
-          <h3 className="mt-2 text-3xl font-bold text-[#3B3B98]">150+</h3>
-        </motion.div>
-
-        <motion.div
-          animate={{ y: [0, 15, 0] }}
-          transition={{ repeat: Infinity, duration: 5 }}
-          className="absolute right-10 top-60 hidden rounded-2xl border border-base-300 bg-base-100 p-5 shadow-xl xl:block dark:border-[#27274954] dark:bg-[#27274954]"
-        >
-          <p className="text-sm text-base-content/60 dark:text-white">
-            🌍 Remote Jobs
-          </p>
-
-          <h3 className="mt-2 text-2xl font-bold text-[#3B3B98]">Worldwide</h3>
-        </motion.div>
-      </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
     </section>
   );
 }

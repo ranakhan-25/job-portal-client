@@ -14,13 +14,32 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      console.log(email);
+      const API_BASE_URL =
+        process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/forgot-password`,
+        {
+          method: "POST",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        },
+      );
 
-      // await axios.post("/api/auth/forgot-password", { email });
+      const data = await response.json();
 
-      alert("Password reset link has been sent.");
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send reset link.");
+      }
+
+      alert(data.message || "Password reset link has been sent.");
     } catch (error) {
       console.log(error);
+      alert(
+        error instanceof Error ? error.message : "Failed to send reset link.",
+      );
     } finally {
       setLoading(false);
     }
@@ -28,15 +47,12 @@ export default function ForgotPasswordPage() {
 
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-50 px-6 transition-colors duration-300 dark:bg-slate-950">
-
       {/* Background */}
 
       <div className="absolute inset-0 -z-10 overflow-hidden">
-
         <div className="absolute left-0 top-0 h-96 w-96 rounded-full bg-[#3B3B98]/20 blur-3xl" />
 
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
-
       </div>
 
       <motion.div
@@ -49,16 +65,11 @@ export default function ForgotPasswordPage() {
           y: 0,
         }}
         transition={{
-          duration: .6,
+          duration: 0.6,
         }}
         className="card w-full max-w-md rounded-3xl border border-gray-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
       >
-
-        <form
-          onSubmit={handleSubmit}
-          className="card-body"
-        >
-
+        <form onSubmit={handleSubmit} className="card-body">
           {/* Icon */}
 
           <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#3B3B98] text-3xl text-white">
@@ -72,7 +83,8 @@ export default function ForgotPasswordPage() {
           </h1>
 
           <p className="mb-6 text-center text-gray-500 dark:text-gray-400">
-            Enter your email address and we&apos;ll send you a password reset link.
+            Enter your email address and we&apos;ll send you a password reset
+            link.
           </p>
 
           {/* Email */}
@@ -87,9 +99,7 @@ export default function ForgotPasswordPage() {
             type="email"
             required
             value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             className="input input-bordered w-full border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-[#3B3B98] dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-gray-500"
           />
@@ -103,7 +113,6 @@ export default function ForgotPasswordPage() {
             {loading ? (
               <>
                 <span className="loading loading-spinner loading-sm"></span>
-
                 Sending...
               </>
             ) : (
@@ -111,9 +120,7 @@ export default function ForgotPasswordPage() {
             )}
           </button>
 
-          <div className="divider text-gray-500 dark:text-gray-400">
-            OR
-          </div>
+          <div className="divider text-gray-500 dark:text-gray-400">OR</div>
 
           {/* Back Login */}
 
@@ -123,11 +130,8 @@ export default function ForgotPasswordPage() {
           >
             Back to Login
           </Link>
-
         </form>
-
       </motion.div>
-
     </section>
   );
 }

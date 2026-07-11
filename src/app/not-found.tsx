@@ -76,7 +76,7 @@ export default function NotFound() {
           }}
           className="mx-auto mt-6 max-w-xl text-lg leading-8"
         >
-          The page you are looking for doesn't exist,
+          The page you are looking for doesn&apos;t,
           has been removed, or the URL may be incorrect.
         </motion.p>
 
@@ -102,7 +102,7 @@ export default function NotFound() {
             href="/jobs"
             className="btn btn-outline border-[#3B3B98] px-8 text-[#3B3B98] hover:bg-[#3B3B98] hover:text-white"
           >
-            💼 Browse Jobs
+           Explore Company
           </Link>
 
         </motion.div>
