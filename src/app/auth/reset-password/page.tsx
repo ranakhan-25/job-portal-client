@@ -4,6 +4,7 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -45,29 +46,22 @@ export default function ResetPasswordPage() {
 
     try {
       setLoading(true);
-      const API_BASE_URL =
-        process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
-      const response = await fetch(`${API_BASE_URL}/api/users/reset-password`, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token,
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
-        }),
+      const { data, error } = await authClient.resetPassword({
+        token,
+        newPassword: formData.password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || "Failed to reset password.");
+      if (error) {
+        setError(error.message || "Failed to reset password.");
         return;
       }
 
-      setSuccess(data.message || "Password reset successfully.");
+      if (!data?.status) {
+        setError("Failed to reset password.");
+        return;
+      }
+
+      setSuccess("Password reset successfully.");
       setTimeout(() => {
         router.push("/auth/login");
       }, 1200);

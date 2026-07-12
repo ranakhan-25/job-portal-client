@@ -22,12 +22,28 @@ interface UserProps {
 }
 
 export default function UserDropdown({ user, onLogout }: UserProps) {
+  const normalizedRole = user.role.toLowerCase();
+
   const dashboardPath =
-    user.role === "Admin"
+    normalizedRole === "admin"
       ? "/dashboard/admin"
-      : user.role === "Creator"
-        ? "/dashboard/creator"
-        : "/dashboard/supporter";
+      : normalizedRole === "company"
+        ? "/dashboard/company"
+        : "/dashboard/user";
+
+  const paymentsPath =
+    normalizedRole === "admin"
+      ? "/dashboard/admin"
+      : normalizedRole === "company"
+        ? "/dashboard/company/payments"
+        : "/dashboard/user/payments";
+
+  const settingsPath =
+    normalizedRole === "admin"
+      ? "/dashboard/admin/settings"
+      : normalizedRole === "company"
+        ? "/dashboard/company/settings"
+        : "/dashboard/user/settings";
 
   return (
     <div className="hidden lg:flex items-center gap-3">
@@ -188,14 +204,14 @@ export default function UserDropdown({ user, onLogout }: UserProps) {
           </li>
 
           <li>
-            <Link href="/dashboard/payments" className="dark:hover:bg-gray-900">
+            <Link href={paymentsPath} className="dark:hover:bg-gray-900">
               <CreditCard size={18} />
               Payments
             </Link>
           </li>
 
           <li>
-            <Link href="/settings" className="dark:hover:bg-gray-900">
+            <Link href={settingsPath} className="dark:hover:bg-gray-900">
               <Settings size={18} />
               Settings
             </Link>

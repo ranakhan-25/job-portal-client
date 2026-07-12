@@ -57,7 +57,6 @@ export default function HeroSection() {
     getUser();
   }, []);
 
-
   return (
     <section className="relative h-[90vh] overflow-hidden">
       <Swiper
@@ -137,7 +136,7 @@ export default function HeroSection() {
                   >
                     <p
                       className="
-                      text-red-400
+                      text-[#3B3B98]
                       uppercase
                       font-semibold
                       tracking-[4px]
@@ -163,7 +162,6 @@ export default function HeroSection() {
                     <p
                       className="
                       mt-6
-                      text-gray-200
                       text-lg
                       md:text-xl
                       max-w-2xl
@@ -186,8 +184,8 @@ export default function HeroSection() {
                         px-8
                         py-3
                         rounded-full
-                        bg-red-500
-                        hover:bg-red-600
+                        bg-[#3B3B98]
+                        hover:bg-[#2A2A7A]
                         transition
                         font-semibold
                         shadow-lg

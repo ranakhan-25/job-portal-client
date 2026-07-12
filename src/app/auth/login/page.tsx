@@ -1,5 +1,6 @@
 "use client";
 
+import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ChangeEvent, FormEvent, useState } from "react";
@@ -31,6 +32,26 @@ export default function LoginPage() {
     }));
   };
 
+  const handleGoogleLogin = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      const result = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+      });
+
+      if (result.error) {
+        setError(result.error?.message || "Google Login failed.");
+      }
+    } catch {
+      setError("Google Login failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -44,22 +65,14 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      const API_BASE_URL =
-        process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
-      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
-        method: "POST",
-        mode: "cors",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      const result = await authClient.signIn.email({
+        email: formData.email,
+        password: formData.password,
+        callbackURL: "/dashboard",
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message);
+      if (result.error) {
+        setError(result.error?.message || "Login failed.");
         return;
       }
 
@@ -179,7 +192,11 @@ export default function LoginPage() {
             <div className="divider text-gray-500 dark:text-gray-400">OR</div>
 
             {/* Google */}
-            <button className="btn border-gray-300 bg-white text-gray-700 hover:border-[#3B3B98] hover:bg-[#3B3B98] hover:text-white dark:border-slate-600 dark:bg-slate-800 dark:text-white">
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="btn border-gray-300 bg-white text-gray-700 hover:border-[#3B3B98] hover:bg-[#3B3B98] hover:text-white dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"

@@ -1,31 +1,45 @@
-// lib/accessUser.ts
+import { authClient } from "@/lib/auth-client";
 
-export const accessUser = async () => {
+export type UserProfile = {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image?: string;
+  role?: string;
+  phone?: string;
+  bio?: string;
+  credits?: number;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+};
+
+export const accessUser = async (): Promise<UserProfile | null> => {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/api/users/me`,
-      {
-        method: "GET",
-        mode: "cors",
-        credentials: "include",
-        cache: "no-store",
-      }
-    );
-
-    if (!res.ok) {
+    const result = await authClient.getSession();
+    if (result.error || !result.data) {
       return null;
     }
 
-    const data = await res.json();
-
-    console.log(data)
-
-    return data.user;
-
-    
-
+    return result?.data?.user ?? null;
   } catch (error) {
     console.error("Failed to fetch user:", error);
     return null;
   }
 };
+
+export const accessToken = async (): Promise<string | null> => {
+  try {
+    const result = await authClient.token();
+    if (result.error || !result.data) {
+      return null;
+    }
+
+    return result.data.token ?? null;
+  } catch (error) {
+    console.error("Failed to fetch token:", error);
+    return null;
+  }
+};
+
+export const getToken = accessToken;

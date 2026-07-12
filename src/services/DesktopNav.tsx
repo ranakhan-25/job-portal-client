@@ -15,12 +15,12 @@ const navLinks: NavLink[] = [
     href: "/",
   },
   {
-    label: "Explore Campaigns",
+    label: "All Campaigns",
     href: "/campaigns",
   },
   {
-    label: "Categories",
-    href: "/categories",
+    label: "About Us",
+    href: "/about-us",
   },
   {
     label: "How It Works",
@@ -33,16 +33,12 @@ export default function DesktopNav() {
 
   return (
     <nav className="hidden lg:flex items-center">
-
       <ul className="flex items-center gap-1">
-
         {navLinks.map((item) => {
-
           const active = pathname === item.href;
 
           return (
             <li key={item.href}>
-
               <Link
                 href={item.href}
                 className={`
@@ -57,11 +53,7 @@ export default function DesktopNav() {
                   transition-all
                   duration-300
 
-                  ${
-                    active
-                      ? "text-[#3B3B98]"
-                      : "hover:text-[#3B3B98]"
-                  }
+                  ${active ? "text-[#3B3B98]" : "hover:text-[#3B3B98]"}
                 `}
               >
                 {item.label}
@@ -86,13 +78,10 @@ export default function DesktopNav() {
                   />
                 )}
               </Link>
-
             </li>
           );
         })}
-
       </ul>
-
     </nav>
   );
 }

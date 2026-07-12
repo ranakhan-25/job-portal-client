@@ -8,16 +8,12 @@ import { useTheme } from "next-themes";
 import DesktopNav from "@/services/DesktopNav";
 import UserDropdown from "@/services/UserDropdown";
 import MobileMenu from "@/services/MobileMenu";
-import { accessUser } from "@/lib/auth/accessUser";
+import {
+  accessToken,
+  accessUser,
+  type UserProfile,
+} from "@/lib/auth/accessUser";
 import { logoutUser } from "@/lib/auth/logout";
-
-interface UserProfile {
-  name: string;
-  email: string;
-  image?: string;
-  role?: string;
-  credits?: number;
-}
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();

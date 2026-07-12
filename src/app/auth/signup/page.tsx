@@ -16,6 +16,9 @@ interface RegisterForm {
   phone: string;
   bio: string;
 }
+
+type SignUpEmailBody = Parameters<(typeof authClient)["signUp"]["email"]>[0];
+
 type UserRole = "user" | "company";
 
 export default function RegisterPage() {
@@ -23,8 +26,6 @@ export default function RegisterPage() {
   const [role, setRole] = useState<UserRole>("user");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const API_BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL;
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -150,28 +151,21 @@ export default function RegisterPage() {
         avatar = await uploadImage();
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/users/register`, {
-        method: "POST",
-        mode: "cors",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-          bio: formData.bio,
-          role,
-          image: avatar,
-        }),
-      });
+      const signUpPayload = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        image: avatar || undefined,
+        role,
+        phone: formData.phone,
+        bio: formData.bio,
+        callbackURL: "/auth/login",
+      } as unknown as SignUpEmailBody;
 
-      const data = await response.json();
+      const result = await authClient.signUp.email(signUpPayload);
 
-      if (!response.ok) {
-        setMessage(data.message || "Registration failed.");
+      if (result.error) {
+        setMessage(result.error?.message || "Registration failed.");
         return;
       }
 

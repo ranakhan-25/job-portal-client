@@ -36,7 +36,7 @@ const navLinks = [
     icon: Home,
   },
   {
-    label: "Explore Campaigns",
+    label: "All Campaigns",
     href: "/campaigns",
     icon: HeartHandshake,
   },
@@ -49,12 +49,7 @@ const navLinks = [
     label: "About",
     href: "/about",
     icon: Info,
-  },
-  {
-    label: "Contact",
-    href: "/contact",
-    icon: Phone,
-  },
+  }
 ];
 
 export default function MobileMenu({
@@ -64,6 +59,21 @@ export default function MobileMenu({
   onLogout,
 }: MobileMenuProps) {
   const pathname = usePathname();
+  const normalizedRole = user.role.toLowerCase();
+
+  const dashboardPath =
+    normalizedRole === "admin"
+      ? "/dashboard/admin"
+      : normalizedRole === "company"
+        ? "/dashboard/company"
+        : "/dashboard/user";
+
+  const paymentsPath =
+    normalizedRole === "admin"
+      ? "/dashboard/admin"
+      : normalizedRole === "company"
+        ? "/dashboard/company/payments"
+        : "/dashboard/user/payments";
 
   return (
     <div className="lg:hidden border-t bg-base-100 dark:bg-black shadow-xl overflow-auto">
@@ -189,7 +199,7 @@ export default function MobileMenu({
 
             <div className="mt-5 space-y-2">
               <Link
-                href="/dashboard"
+                href={dashboardPath}
                 onClick={closeMenu}
                 className="btn btn-ghost dark:text-gray-400 justify-start w-full"
               >
@@ -216,7 +226,7 @@ export default function MobileMenu({
               </Link>
 
               <Link
-                href="/dashboard/payments"
+                href={paymentsPath}
                 onClick={closeMenu}
                 className="btn btn-ghost dark:text-gray-400 justify-start w-full"
               >

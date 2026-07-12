@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { FormEvent, useState } from "react";
+import { authClient } from "@/lib/auth-client";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -14,27 +15,17 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const API_BASE_URL =
-        process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
-      const response = await fetch(
-        `${API_BASE_URL}/api/users/forgot-password`,
-        {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        },
-      );
+      const redirectTo = `${window.location.origin}/auth/reset-password`;
+      const { data, error } = await authClient.requestPasswordReset({
+        email,
+        redirectTo,
+      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to send reset link.");
+      if (error) {
+        throw new Error(error.message || "Failed to send reset link.");
       }
 
-      alert(data.message || "Password reset link has been sent.");
+      alert(data?.message || "Password reset link has been sent.");
     } catch (error) {
       console.log(error);
       alert(
