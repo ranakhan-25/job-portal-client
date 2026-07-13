@@ -66,13 +66,13 @@ export default function RootLayout({
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-background text-foreground"
       >
-        <Providers >
-          <Navbar />
-          {children}
-          <Footer/>
+        <Providers>
+            <Navbar />
+            {children}
+            <Footer />
         </Providers>
 
-        <ToastContainer/>
+        <ToastContainer />
       </body>
     </html>
   );
