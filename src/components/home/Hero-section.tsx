@@ -23,7 +23,7 @@ const slides = [
     description:
       "Help creators bring innovative projects to life through community powered crowdfunding.",
     image:
-      "https://enventyspartners.com/wp-content/uploads/2016/09/crowdfunding-marketing-team.jpg",
+      "https://i.ibb.co.com/mVWmC8Ld/images-1.jpg",
   },
   {
     id: 2,
@@ -32,7 +32,7 @@ const slides = [
     description:
       "Share your vision, collect contributions and build something meaningful.",
     image:
-      "https://ideabuddy.com/wp-content/uploads/2023/05/startup-business-plan.jpg",
+      "https://i.ibb.co.com/MkhNWGB7/images-2.jpg",
   },
   {
     id: 3,
@@ -41,7 +41,7 @@ const slides = [
     description:
       "Connect with supporters and make a positive impact around the world.",
     image:
-      "https://static.vecteezy.com/system/resources/previews/077/825/897/large_2x/friends-hands-and-star-together-outdoor-for-unity-community-or-teamwork-support-below-nature-and-group-with-sign-shape-for-solidarity-connection-and-partnership-with-interaction-or-collaboration-photo.jpg",
+      "https://i.ibb.co.com/XfmBXfpB/image-3.jpg",
   },
 ];
 
