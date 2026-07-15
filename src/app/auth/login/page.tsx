@@ -39,7 +39,7 @@ export default function LoginPage() {
     try {
       const result = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL: "/",
       });
 
       if (result.error) {
@@ -68,7 +68,7 @@ export default function LoginPage() {
       const result = await authClient.signIn.email({
         email: formData.email,
         password: formData.password,
-        callbackURL: "/dashboard",
+        callbackURL: "/",
       });
 
       if (result.error) {

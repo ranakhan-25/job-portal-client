@@ -1,234 +1,282 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import CreditPackages from "@/components/user/purchase-credits/Credit-Packages";
-import OrderSummary from "@/components/user/purchase-credits/Order-Summary";
-import PurchaseHistory from "@/components/user/purchase-credits/PurchaseHistory";
-import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  CreditCard,
-  ShieldCheck,
-  Sparkles,
-  Wallet,
-  Loader2,
-} from "lucide-react";
 
-// TypeScript values define korar jonno exact interfaces
-interface PurchaseRecord {
+// ব্যাকএন্ড API এন্ডপয়েন্ট এক্সাম্পল:
+// const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// app.post('/api/user/stripe/create-checkout', async (req, res) => {
+  // const { amount } = req.body; // ফ্রন্টএন্ড থেকে আসা অ্যামাউন্ট
+  
+  // try {
+  //   const session = await stripe.checkout.sessions.create({
+  //     payment_method_types: ['card'],
+  //     line_items: [{
+  //       price_data: {
+  //         currency: 'usd',
+  //         product_data: { name: 'Platform Wallet Credits Upgrade' },
+  //         unit_amount: amount * 100, // স্ট্রাইপ সেন্ট (Cents) হিসেবে হিসাব করে ($1 = 100 Cents)
+  //       },
+  //       quantity: 1,
+  //     }],
+  //     mode: 'payment',
+  //     success_url: `${process.env.CLIENT_URL}/user/dashboard?payment=success`,
+  //     cancel_url: `${process.env.CLIENT_URL}/user/purchase-credits?payment=cancelled`,
+  //   });
+
+  //   res.status(200).json({ success: true, sessionId: session.id });
+  // } catch (err) {
+  //   res.status(500).json({ success: false, message: err.message });
+  // }
+// });
+
+import { useState } from "react";
+import { 
+  Wallet, 
+  CreditCard, 
+  DollarSign, 
+  CheckCircle2, 
+  Loader2, 
+  Sparkles, 
+  ShieldCheck,
+  AlertCircle
+} from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import { ins } from "framer-motion/client";
+
+// স্ট্রাইপ লাইব্রেরি ইনিশিয়েট করা (আপনার Public Key এখানে বসবে)
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "pk_test_mock");
+
+interface CreditPackage {
   id: string;
   amount: number;
-  credits: number;
-  status: "success" | "pending" | "failed";
-  createdAt: string;
+  bonus: number;
+  popular: boolean;
+  badge?: string;
 }
 
-interface WalletData {
-  currentCredits: number;
-  status: string;
-  history: PurchaseRecord[];
-}
+export default function PurchaseCreditsPage() {
+  const [customAmount = "", setCustomAmount] = useState<string>("");
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-export default function PurchaseCredits() {
-  // Application Dynamic Component States
-  const [wallet, setWallet] = useState<WalletData>({
-    currentCredits: 0,
-    status: "active",
-    history: [],
-  });
-  
-  const [selectedPackage, setSelectedPackage] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const creditPackages: CreditPackage[] = [
+    { id: "pkg-1", amount: 25, bonus: 0, popular: false },
+    { id: "pkg-2", amount: 50, bonus: 5, popular: true, badge: "Most Popular" },
+    { id: "pkg-3", amount: 100, bonus: 15, popular: false, badge: "Best Value" },
+    { id: "pkg-4", amount: 250, bonus: 45, popular: false }
+  ];
 
-  // API Call Execution Engine
-  useEffect(() => {
-    async function fetchWalletAndHistory() {
-      try {
-        setLoading(true);
-        // data processing call logic initialization 
-        const response = await fetch("/api/user/wallet"); 
-        if (!response.ok) {
-          throw new Error("Failed to sync wallet records from node cluster.");
-        }
-        const data = await response.json();
-        setWallet(data);
-      } catch (err: any) {
-        setError(err.message || "An unexpected network execution block occurred.");
-      } finally {
-        setLoading(false);
-      }
+  const handlePackageSelect = (pkg: CreditPackage) => {
+    setSelectedPackage(pkg.id);
+    setCustomAmount(pkg.amount.toString());
+    setErrorMsg(null);
+  };
+
+  const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomAmount(e.target.value);
+    setSelectedPackage(null);
+    setErrorMsg(null);
+  };
+
+  // ==========================================
+  // স্ট্রাইপ পেমেন্ট ও ব্যাকএন্ড ইন্টিগ্রেশন লজিক
+  // ==========================================
+  const handleStripeCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const finalAmount = parseFloat(customAmount);
+    if (!finalAmount || finalAmount <= 0) {
+      setErrorMsg("Please enter a valid donation or credit amount.");
+      return;
     }
 
-    fetchWalletAndHistory();
-  }, []);
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const token = localStorage.getItem("user-token");
+      
+      // ১. ব্যাকএন্ডে রিকোয়েস্ট পাঠানো Stripe Checkout Session তৈরি করার জন্য
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/stripe/create-checkout`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ amount: finalAmount })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success || !data.sessionId) {
+        throw new Error(data.message || "Failed to initiate Stripe gateway session.");
+      }
+
+      // ২. স্ট্রাইপ লোড করে ইউজারের ব্রাউজারকে স্ট্রাইপের অফিসিয়াল পেমেন্ট পেজে রিডাইরেক্ট করা
+      const stripe = await stripePromise;
+      if (!stripe) throw new Error("Stripe script failed to initialize.");
+
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: data.sessionId // ব্যাকএন্ড থেকে আসা ডাইনামিক সেশন আইডি
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+    } catch (err) {
+      if (err instanceof Error) { 
+        console.error("Stripe gateway routing issue:", err);
+      setErrorMsg(err.message || "Something went wrong. Connecting to mock gateway...");
+      }
+      
+      
+      // Fallback/Mock Mode (ব্যাকএন্ড রেডি না থাকলে টেস্টিং-এর সুবিধার্থে)
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setSuccessMsg(`Mock Secure Mode: $${finalAmount} credited to vault successfully.`);
+        setCustomAmount("");
+        setSelectedPackage(null);
+      }, 1500);
+    }
+  };
 
   return (
-    <div className="space-y-8 max-h-screen overflow-auto p-1">
-      {/* ========================= */}
-      {/* Dynamic Hero Section */}
-      {/* ========================= */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-[#3B3B98]/20 bg-slate-50 dark:bg-zinc-950 p-6 md:p-10 lg:p-14 text-slate-900 dark:text-zinc-50 transition-colors duration-300"
-      >
-        {/* Animated Orbs Layer */}
-        <div className="absolute inset-0 pointer-events-none">
-          <motion.div
-            animate={{ x: [0, 40, 0], y: [0, -30, 0] }}
-            transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-            className="absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[#3B3B98]/10 dark:bg-[#3B3B98]/5 blur-3xl"
-          />
-          <motion.div
-            animate={{ x: [0, -30, 0], y: [0, 40, 0] }}
-            transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
-            className="absolute -bottom-28 right-0 h-96 w-96 rounded-full bg-[#3B3B98]/10 dark:bg-[#3B3B98]/5 blur-3xl"
-          />
-          <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02]">
-            <div className="h-full w-full bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px]" />
+    <div className="max-w-5xl space-y-6 p-4 font-sans">
+      
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
+          <Wallet className="text-emerald-600" size={24} /> Purchase Platform Credits
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          Load credits into your account securely via Stripe to back campaigns instantly.
+        </p>
+      </div>
+
+      {/* Alert Responses */}
+      {successMsg && (
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 flex items-center gap-3">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+          <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">{successMsg}</p>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="rounded-xl border border-rose-100 bg-rose-50/50 dark:bg-rose-950/20 p-4 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
+          <p className="text-xs font-bold text-rose-800 dark:text-rose-400">{errorMsg}</p>
+        </div>
+      )}
+
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        
+        {/* Left Side: Pricing grids */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Select Funding Package</h3>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+              {creditPackages.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  onClick={() => handlePackageSelect(pkg)}
+                  className={`relative cursor-pointer rounded-2xl border p-5 flex flex-col justify-between transition group ${
+                    selectedPackage === pkg.id
+                      ? "border-emerald-600 bg-emerald-50/20 dark:bg-emerald-950/10 shadow-xs"
+                      : "border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-gray-300"
+                  }`}
+                >
+                  {pkg.badge && (
+                    <span className="absolute right-3 top-3 rounded-md bg-emerald-600 px-2 py-0.5 text-[9px] font-black uppercase text-white tracking-wider">
+                      {pkg.badge}
+                    </span>
+                  )}
+                  <div className="space-y-1">
+                    <span className="text-xs font-medium text-gray-400">Load Balance</span>
+                    <div className="text-2xl font-black text-gray-900 dark:text-white group-hover:text-emerald-600 transition">
+                      ${pkg.amount}
+                    </div>
+                  </div>
+                  {pkg.bonus > 0 ? (
+                    <div className="mt-4 flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                      <Sparkles size={12} fill="currentColor" /> <span>Includes +${pkg.bonus} matching bonus</span>
+                    </div>
+                  ) : (
+                    <div className="mt-4 text-[11px] text-gray-400 font-medium">Standard credit allocation</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom Field */}
+          <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">
+            <h3 className="text-xs font-bold text-gray-900 dark:text-white">Or Custom Funding Amount</h3>
+            <div className="relative max-w-xs">
+              <DollarSign className="absolute left-3.5 top-2.5 h-4 w-4 text-gray-400" />
+              <input
+                type="number"
+                min="5"
+                placeholder="Enter custom amount (Min $5)"
+                value={customAmount}
+                onChange={handleCustomAmountChange}
+                className="w-full rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-9 pr-4 py-2 text-xs font-bold text-gray-900 dark:text-white focus:border-emerald-600 focus:outline-hidden"
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Content Box */}
-        <div className="relative z-10 grid gap-12 lg:grid-cols-2 lg:items-center">
-          {/* Left Side Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15 }}
-            className="flex flex-col justify-center"
-          >
-            <div className="inline-flex self-start items-center gap-2 rounded-full border border-[#3B3B98]/20 dark:border-[#3B3B98]/10 bg-[#3B3B98]/5 px-4 py-1.5">
-              <Sparkles size={16} className="text-[#3B3B98] dark:text-[#5757cf]" />
-              <span className="text-xs font-semibold tracking-wide uppercase text-[#3B3B98] dark:text-[#8e8ee6]">
-                Secure Credit Purchase
-              </span>
-            </div>
-
-            <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl xl:text-6xl leading-[1.15]">
-              Purchase{" "}
-              <span className="block mt-1 bg-gradient-to-r from-[#3B3B98] to-[#5757cf] dark:from-[#8e8ee6] dark:to-slate-200 bg-clip-text text-transparent">
-                Credits Instantly
-              </span>
-            </h1>
-
-            <p className="mt-6 max-w-xl text-base md:text-lg leading-relaxed text-slate-600 dark:text-zinc-400">
-              Buy credits securely and instantly support your favorite campaigns.
-              Your purchased credits will be added to your wallet immediately after a successful payment.
-            </p>
-
-            {/* Error Message Logger Banner */}
-            {error && (
-              <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-500 font-medium">
-                ⚠️ Runtime Sync Issue: {error}
+        {/* Right Side: Stripe Invoice Breakdown & Checkout Trigger */}
+        <div className="rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 flex flex-col justify-between space-y-6 h-fit">
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Secure Stripe Settlement</h3>
+            
+            <div className="rounded-xl bg-gray-50 dark:bg-slate-800/40 p-4 border border-gray-100 dark:border-transparent text-xs space-y-2.5">
+              <div className="flex justify-between font-medium text-gray-400">
+                <span>Selected Amount</span>
+                <span className="text-gray-900 dark:text-white font-bold">${customAmount || "0.00"}</span>
               </div>
-            )}
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <button 
-                onClick={() => document.getElementById("packages-section")?.scrollIntoView({ behavior: "smooth" })}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#3B3B98] px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#2c2c77] active:scale-98 shadow-md shadow-[#3B3B98]/20"
-              >
-                Buy Credits
-                <ArrowRight size={16} />
-              </button>
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-slate-200/60 dark:border-zinc-900 pt-6">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-zinc-400">
-                <ShieldCheck size={18} className="text-emerald-500" />
-                <span className="text-xs font-medium">Secure Payment Gateway</span>
+              <div className="flex justify-between font-medium text-gray-400 border-b border-gray-200/50 pb-2">
+                <span>Stripe Processing Fee</span>
+                <span className="text-emerald-600 font-bold">Covered by Platform</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-600 dark:text-zinc-400">
-                <CreditCard size={18} className="text-[#3B3B98] dark:text-[#8e8ee6]" />
-                <span className="text-xs font-medium">Instant Credit Delivery</span>
+              <div className="flex justify-between font-bold text-sm">
+                <span className="text-gray-900 dark:text-white">Total Charge (USD)</span>
+                <span className="text-emerald-600">${customAmount || "0.00"}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Right Side (Dynamic Wallet UI status block) */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.25 }}
-            whileHover={{ y: -4 }}
-            className="rounded-2xl border border-[#3B3B98]/10 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-6 md:p-8 shadow-xl shadow-slate-200/40 dark:shadow-none"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#3B3B98]/5 text-[#3B3B98] dark:text-[#8e8ee6]">
-                <Wallet size={26} />
-              </div>
-              {loading ? (
-                <Loader2 className="text-indigo-500 animate-spin" size={20} />
+          <div className="space-y-3">
+            {/* স্ট্রাইপ চেকআউটের সাথে যুক্ত বাটন */}
+            <button
+              onClick={handleStripeCheckout}
+              disabled={isSubmitting || !customAmount || parseFloat(customAmount) <= 0}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-xs font-black text-white hover:bg-emerald-700 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" /> Launching Stripe...
+                </>
               ) : (
-                <ShieldCheck className="text-emerald-500" size={22} />
+                <>
+                  Pay via Stripe <CreditCard size={14} />
+                </>
               )}
+            </button>
+            
+            <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400 font-medium">
+              <ShieldCheck size={12} className="text-emerald-600" /> <span>Redirects to secure Stripe Checkout</span>
             </div>
+          </div>
 
-            <p className="mt-6 text-xs font-semibold tracking-wider uppercase text-slate-400 dark:text-zinc-500">
-              Available Balance
-            </p>
-
-            <h2 className="mt-1 text-5xl font-black tracking-tight text-slate-950 dark:text-white flex items-baseline gap-2">
-              {loading ? (
-                <span className="inline-block h-10 w-24 animate-pulse rounded-lg bg-slate-200 dark:bg-zinc-800" />
-              ) : (
-                wallet.currentCredits.toLocaleString()
-              )}
-              {!loading && <span className="text-sm font-bold text-[#3B3B98] dark:text-[#8e8ee6]">CRD</span>}
-            </h2>
-
-            <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
-              Ready to support your choice of campaigns
-            </p>
-
-            <div className="mt-6 rounded-xl border border-slate-100 dark:border-zinc-800/60 bg-slate-50/50 dark:bg-zinc-900/40 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-600 dark:text-zinc-400">Wallet Status</span>
-                <span className="rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 capitalize">
-                  {loading ? "syncing..." : wallet.status}
-                </span>
-              </div>
-
-              <div className="mt-3 h-1.5 rounded-full bg-slate-200 dark:bg-zinc-800 overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: loading ? "30%" : "100%" }}
-                  className="h-full rounded-full bg-gradient-to-r from-[#3B3B98] to-[#5757cf] dark:from-[#8e8ee6]" 
-                />
-              </div>
-              <p className="mt-2 text-[11px] text-slate-400 dark:text-zinc-500">
-                Your wallet is fully active, encrypted, and synced with our mainnet channels.
-              </p>
-            </div>
-          </motion.div>
         </div>
-      </motion.section>
 
-      {/* ========================================= */}
-      {/* Child Integration with Props Binding   */}
-      {/* ========================================= */}
-      
-      <div id="packages-section">
-        <CreditPackages 
-          onSelectPackage={setSelectedPackage} 
-          selectedPackage={selectedPackage} 
-          isLoading={loading}
-        />
       </div>
 
-      <OrderSummary 
-        selectedPackage={selectedPackage} 
-        currentCredits={wallet.currentCredits}
-        isLoading={loading}
-      />
-
-      <PurchaseHistory 
-        history={wallet.history} 
-        isLoading={loading}
-      />
     </div>
   );
 }

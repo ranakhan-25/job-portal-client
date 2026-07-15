@@ -14,10 +14,11 @@ import {
   type UserProfile,
 } from "@/lib/auth/accessUser";
 import { logoutUser } from "@/lib/auth/logout";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
-
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,7 +51,7 @@ export default function Navbar() {
       supports-backdrop-filter:bg-base-100/60
     "
     >
-      <div className="container mx-auto h-20 px-5">
+      <div className="max-w-7xl mx-auto h-20 px-5">
         <div className="flex h-full items-center justify-between">
           {/* Logo */}
 
@@ -129,6 +130,8 @@ export default function Navbar() {
                   try {
                     await logoutUser();
                     setUser(null);
+                    router.refresh();
+                    router.push("/auth/login");
                   } catch (error) {
                     console.error("Logout failed", error);
                   }
